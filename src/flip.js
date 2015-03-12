@@ -15,56 +15,27 @@
 
   $.fn.flip = function(options) {
     this.each(function(){
-      var $dom = $(this);
+        var $dom = $(this);
 
-      if (options !== undefined && typeof(options) == "boolean") { // Force flip the DOM
-        if (options) {
-          flip($dom, $dom.data("flipedRotate"));
-        } else {
-          unflip($dom);
-        }
-      } else { //Init flipable DOM
         var settings = $.extend({
-          axis: "y",
           reverse: false,
-          trigger: "click",
-          speed: 500
+          speed: 500,
+          velMax:5000,
+          velMin:2500,
+          rangoMax:5,
+          rangoMin:1
         }, options );
 
-        var prespective;
         var direction = settings.reverse? "-180deg" : "180deg";
-        
-        if (settings.axis.toLowerCase() == "x") {
-          prespective = $dom.outerHeight() * 2;
-          // save rotating css to DOM for manual flip
-          $dom.data("flipedRotate", "rotatex(" + direction + ")");
-        } else {
-          prespective = $dom.outerWidth() * 2;
-          $dom.data("flipedRotate", "rotatey(" + direction + ")");
-        }
+      
+        $dom.data("flipedRotate", "rotatey(" + direction + ")");
         var flipedRotate = $dom.data("flipedRotate");
-
-        $dom.wrap("<div class='flip'></div>");
-        $dom.parent().css({
-          perspective: prespective,
-          position: "relative",
-          "margin-top": $dom.css("margin-top"),
-          "margin-bottom": $dom.css("margin-bottom"),
-          "margin-left": $dom.css("margin-left"),
-          "margin-right": $dom.css("margin-right"),
-          width: $dom.outerWidth(),
-          height: $dom.outerHeight()
-        });
 
         var speedInSec = settings.speed/1000 || 0.5;
         $dom.css({
           "transform-style": "preserve-3d",
-          transition: "all " + speedInSec + "s ease-out",
-          margin: '0px'
+          transition: "all " + speedInSec + "s ease-out" 
         });
-
-        $dom.find(".front, .back").outerHeight($dom.height());
-        $dom.find(".front, .back").outerWidth($dom.width());
 
         $dom.find(".front, .back").css({
           position: "absolute",
@@ -74,44 +45,35 @@
         $dom.find(".back").css({
           transform: flipedRotate
         });
+        $(document).ready(function(){
+              $dom.data("hover", false);
+              var nextContent = $('#'+$dom.attr('id')+' .store li:nth-child('+(Math.floor(Math.random() * (settings.rangoMax-settings.rangoMin+settings.rangoMin)) + settings.rangoMin)+')').html(); 
+              $('#'+$dom.attr('id')+' .front').html(nextContent);
 
-        if (settings.trigger.toLowerCase() == "click") {
-          $dom.find('button, a, input[type="submit"]').click(function (event) {
-            event.stopPropagation();
-          });
+        var random= Math.floor(Math.random() * (settings.velMax-settings.velMin+settings.velMin)) + settings.velMin; 
 
-          $dom.click(function() {
-            if ($dom.data("fliped")) {
+          setInterval(function() { 
+            random2= Math.floor(Math.random() * (settings.rangoMax-settings.rangoMin+settings.rangoMin)) + settings.rangoMin;
+            var nextContent = $('#'+$dom.attr('id')+' .store li:nth-child(' + random2 + ')').html(); 
+
+            
+            if(!$dom.data("hover")){
+             
+           if ($dom.data("fliped")) {
+              $('#'+$dom.attr('id')+' .front').html(nextContent);
               unflip($dom);
-            } else {
+
+            } 
+           else {
+              $('#'+$dom.attr('id')+' .back').html(nextContent);
               flip($dom, flipedRotate);
-            }
-          });
-        } else if (settings.trigger.toLowerCase() == "hover") {
-          var performFlip = function() {
-            $dom.unbind('mouseleave', performUnflip);
 
-            flip($dom, flipedRotate);
-
-            setTimeout(function() {
-              $dom.bind('mouseleave', performUnflip);
-              if (!$dom.is(":hover")) {
-                unflip($dom);
-              }
-            }, (settings.speed+ 150));
-          };
-
-          var performUnflip = function() {
-            unflip($dom);
-          };
-
-          $dom.mouseenter(performFlip);
-          $dom.mouseleave(performUnflip);
-        }
-      }
+            }}
+          }, random);
+            $('#'+$dom.attr('id')).hover(function(){ $dom.data("hover", true);},function(){ $dom.data("hover", false);});
+        });
+      
     });
-
     return this;
   };
- 
 }( jQuery ));
